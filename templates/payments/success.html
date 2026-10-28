@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Payment Successful — ProChat{% endblock %}
+{% block page_title %}Payment Successful{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:60px auto;text-align:center">
+    <div class="card">
+        <div style="font-size:64px;margin-bottom:16px">🎉</div>
+        <h1 style="font-size:24px;font-weight:800;color:var(--green);margin-bottom:8px">Payment Successful!</h1>
+        <p style="font-size:14px;color:var(--text3);margin-bottom:24px">Your ProChat plan has been activated. Welcome to the full experience!</p>
+        <a href="{% url 'workspace' %}" class="btn-primary" style="display:inline-block">Go to Workspace →</a>
+    </div>
+</div>
+{% endblock %}

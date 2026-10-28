@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Owner Dashboard — ProChat{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <style>
+        /* ── Owner Layout ── */
+        body { display: flex; min-height: 100vh; background: var(--bg); }
+
+        /* ── Owner Sidebar ── */
+        .owner-sidebar {
+            width: 240px;
+            min-height: 100vh;
+            background: var(--bg2);
+            border-right: 1px solid var(--border2);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .owner-logo {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .owner-logo-icon {
+            width: 36px; height: 36px;
+            background: var(--violet);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: white;
+        }
+        .owner-logo-text { font-size: 16px; font-weight: 800; color: var(--text); }
+        .owner-logo-sub  { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+        .owner-nav { flex: 1; padding: 10px 8px; }
+
+        .nav-section {
+            font-size: 10px; font-weight: 600;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding: 8px 10px 4px;
+            margin-top: 6px;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px; margin: 1px 2px;
+            border-radius: var(--radius-sm);
+            font-size: 13px; color: var(--text2);
+            cursor: pointer; transition: all .15s;
+            text-decoration: none;
+        }
+        .nav-item:hover  { background: var(--bg3); color: var(--text); }
+        .nav-item.active { background: var(--violet-dim); color: var(--violet-light); }
+        .nav-icon { font-size: 16px; width: 22px; text-align: center; }
+
+        .nav-alert {
+            margin-left: auto;
+            background: var(--red);
+            color: white;
+            font-size: 9px; font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 10px;
+        }
+
+        .owner-footer {
+            padding: 10px 8px;
+            border-top: 1px solid var(--border);
+        }
+        .owner-info {
+            padding: 10px 12px;
+            background: var(--bg3);
+            border-radius: var(--radius-sm);
+            margin-bottom: 6px;
+        }
+        .owner-info-name { font-size: 13px; font-weight: 700; color: var(--text); }
+        .owner-info-role {
+            font-size: 10px; font-weight: 600;
+            color: var(--violet-light);
+            background: var(--violet-dim);
+            padding: 1px 7px; border-radius: 10px;
+            display: inline-block; margin-top: 3px;
+        }
+
+        /* ── Main Wrapper ── */
+        .owner-main {
+            margin-left: 240px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ── Top Bar ── */
+        .owner-topbar {
+            height: 54px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center;
+            padding: 0 24px; gap: 12px;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .owner-topbar-title { font-size: 15px; font-weight: 700; color: var(--text); flex: 1; }
+        .owner-topbar-right { display: flex; align-items: center; gap: 10px; }
+        .owner-badge {
+            background: var(--violet-dim);
+            border: 1px solid var(--border3);
+            color: var(--violet-light);
+            font-size: 11px; font-weight: 600;
+            padding: 4px 12px; border-radius: 20px;
+        }
+
+        /* ── Page Content ── */
+        .owner-content { flex: 1; padding: 24px; }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--bg5); border-radius: 2px; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ── OWNER SIDEBAR ── -->
+<aside class="owner-sidebar">
+
+    <!-- Logo -->
+    <div class="owner-logo">
+        <div class="owner-logo-icon">⬡</div>
+        <div>
+            <div class="owner-logo-text">ProChat</div>
+            <div class="owner-logo-sub">Owner Panel</div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="owner-nav">
+
+        <div class="nav-section">Overview</div>
+        <a href="{% url 'owner_dashboard' %}" class="nav-item {% block nav_dashboard %}{% endblock %}">
+            <span class="nav-icon">📊</span> Dashboard
+        </a>
+        <a href="{% url 'owner_analytics' %}" class="nav-item {% block nav_analytics %}{% endblock %}">
+            <span class="nav-icon">📈</span> Analytics
+        </a>
+
+        <div class="nav-section">Users</div>
+        <a href="{% url 'owner_users' %}" class="nav-item {% block nav_users %}{% endblock %}">
+            <span class="nav-icon">👥</span> All Users
+        </a>
+        <a href="{% url 'owner_users' %}?filter=trial" class="nav-item {% block nav_trial %}{% endblock %}">
+            <span class="nav-icon">⏳</span> Trial Users
+        </a>
+
+        <div class="nav-section">Revenue</div>
+        <a href="{% url 'owner_payments' %}" class="nav-item {% block nav_payments %}{% endblock %}">
+            <span class="nav-icon">💳</span> Payments
+        </a>
+        <a href="{% url 'owner_subscriptions' %}" class="nav-item {% block nav_subs %}{% endblock %}">
+            <span class="nav-icon">🔄</span> Subscriptions
+        </a>
+
+        <div class="nav-section">Platform</div>
+        <a href="{% url 'owner_analytics' %}" class="nav-item">
+            <span class="nav-icon">🔧</span> Settings
+        </a>
+
+    </nav>
+
+    <!-- Owner Info & Logout -->
+    <div class="owner-footer">
+        <div class="owner-info">
+            <div class="owner-info-name">{{ request.user.username }}</div>
+            <div class="owner-info-role">👑 Owner</div>
+        </div>
+        <a href="{% url 'owner_logout' %}" class="nav-item" style="color:var(--red)">
+            <span class="nav-icon">↩</span> Logout
+        </a>
+    </div>
+
+</aside>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="owner-main">
+
+    <!-- Top Bar -->
+    <header class="owner-topbar">
+        <div class="owner-topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+        <div class="owner-topbar-right">
+            <span class="owner-badge">👑 Owner Access</span>
+        </div>
+    </header>
+
+    <!-- Alerts -->
+    <div style="padding: 0 24px;">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="margin-top:12px">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Page Content -->
+    <main class="owner-content">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

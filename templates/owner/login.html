@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Login — ProChat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:      #0e0d12;
+            --bg2:     #13121a;
+            --bg3:     #1a1825;
+            --violet:  #7c3aed;
+            --violet2: #9d5cf7;
+            --vl:      #c4a0ff;
+            --text:    #f0eeff;
+            --text2:   #b8b0d8;
+            --text3:   #6b6488;
+            --red:     #f04f6e;
+            --border:  #ffffff18;
+            --radius:  12px;
+            --font:    'Outfit', sans-serif;
+        }
+
+        html, body {
+            min-height: 100vh;
+            background: var(--bg);
+            font-family: var(--font);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-wrap {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .logo-icon {
+            font-size: 40px;
+            color: var(--violet);
+            display: block;
+            margin-bottom: 10px;
+        }
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .logo p {
+            font-size: 12px;
+            color: var(--text3);
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text2);
+            margin-bottom: 6px;
+        }
+        .form-input {
+            width: 100%;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            font-size: 14px;
+            color: var(--text);
+            font-family: var(--font);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--violet); }
+        .form-input::placeholder { color: var(--text3); }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--violet);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 13px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+        .submit-btn:hover { background: var(--violet2); }
+
+        .error-msg {
+            background: #f04f6e20;
+            border: 1px solid var(--red);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--red);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .security-note {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            color: var(--text3);
+            line-height: 1.6;
+        }
+        .security-note span {
+            color: var(--violet);
+            font-weight: 600;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrap">
+        <div class="login-card">
+
+            <!-- Logo -->
+            <div class="logo">
+                <span class="logo-icon">⬡</span>
+                <h1>ProChat</h1>
+                <p>🔒 Owner Access Only</p>
+            </div>
+
+            <!-- Error -->
+            {% if error %}
+            <div class="error-msg">⚠️ {{ error }}</div>
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="POST" action="{% url 'owner_login' %}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input
+                        type="text"
+                        name="username"
+                        class="form-input"
+                        placeholder="Owner username"
+                        required
+                        autofocus
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input
+                        type="password"
+                        name="password"
+                        class="form-input"
+                        placeholder="Owner password"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    Access Dashboard →
+                </button>
+            </form>
+
+            <div class="divider"></div>
+
+            <div class="security-note">
+                This page is for <span>owners only</span>.<br>
+                Unauthorized access attempts are logged.
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

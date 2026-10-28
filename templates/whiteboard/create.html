@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Create Board — ProChat{% endblock %}
+{% block page_title %}New Whiteboard{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:0 auto">
+    <div class="card">
+        <h2 style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:20px">✏ Create a new whiteboard</h2>
+        <form method="POST" action="{% url 'create_board' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Board name</label>
+                <input type="text" name="name" class="form-input" placeholder="e.g. Sprint Planning, Brainstorm" required autofocus>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:8px">
+                <button type="submit" class="btn-primary" style="flex:1;justify-content:center">Create Board →</button>
+                <a href="{% url 'workspace' %}" class="btn-ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block title %}Schedule Meeting — ProChat{% endblock %}
+{% block nav_meetings %}active{% endblock %}
+{% block page_title %}Schedule Meeting{% endblock %}
+
+{% block extra_css %}
+<style>
+.invite-tags { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px; }
+.invite-tag { background:var(--violet-dim);border:1px solid var(--border3);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--violet-light);display:flex;align-items:center;gap:6px; }
+.invite-tag button { background:none;border:none;color:var(--violet-light);cursor:pointer;font-size:14px;padding:0;line-height:1; }
+.user-suggestions { background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);max-height:160px;overflow-y:auto;display:none;position:absolute;width:100%;z-index:100; }
+.user-suggestion-item { padding:8px 12px;cursor:pointer;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px; }
+.user-suggestion-item:hover { background:var(--bg4);color:var(--text); }
+.invite-wrap { position:relative; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:520px;margin:0 auto">
+    <div class="card">
+        <h2 style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:20px">📹 Schedule a Meeting</h2>
+
+        <form method="POST" action="{% url 'create_meeting' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Meeting title *</label>
+                <input type="text" name="title" class="form-input" placeholder="e.g. Design Review, Sprint Standup" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Date & Time *</label>
+                <input type="datetime-local" name="scheduled_at" class="form-input" required>
+            </div>
+
+            <!-- Invite Members -->
+            <div class="form-group">
+                <label class="form-label">Invite Members (optional)</label>
+
+                <!-- Selected tags -->
+                <div class="invite-tags" id="invite-tags"></div>
+
+                <!-- Email input with suggestions -->
+                <div class="invite-wrap">
+                    <input
+                        type="text"
+                        id="invite-input"
+                        class="form-input"
+                        placeholder="Type email or name to invite..."
+                        autocomplete="off"
+                    >
+                    <div class="user-suggestions" id="user-suggestions">
+                        {% for user in users %}
+                        <div class="user-suggestion-item" onclick="addInvite('{{ user.email }}', '{{ user.username }}')">
+                            <div style="width:24px;height:24px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white">
+                                {{ user.username|first|upper }}
+                            </div>
+                            <div>
+                                <div style="font-weight:600">{{ user.username }}</div>
+                                <div style="font-size:11px;color:var(--text3)">{{ user.email }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Hidden input for emails -->
+                <input type="hidden" name="invite_emails" id="invite-emails-hidden">
+                <div style="font-size:11px;color:var(--text3);margin-top:6px">
+                    Email invite + ProChat notification அனுப்பும்
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:8px">
+                <button type="submit" class="btn-primary" style="flex:1;justify-content:center">
+                    Schedule Meeting →
+                </button>
+                <a href="{% url 'meeting_list' %}" class="btn-ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let invitedEmails = [];
+
+// Show suggestions on input
+document.getElementById('invite-input').addEventListener('input', function() {
+    const val = this.value.toLowerCase();
+    const suggestions = document.getElementById('user-suggestions');
+    const items = suggestions.querySelectorAll('.user-suggestion-item');
+
+    if (val.length > 0) {
+        suggestions.style.display = 'block';
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(val) ? 'flex' : 'none';
+        });
+    } else {
+        suggestions.style.display = 'none';
+    }
+});
+
+// Add invite
+function addInvite(email, username) {
+    if (invitedEmails.includes(email)) return;
+
+    invitedEmails.push(email);
+    updateHiddenInput();
+
+    const tag = document.createElement('div');
+    tag.className = 'invite-tag';
+    tag.innerHTML = `
+        <span>👤 ${username}</span>
+        <button type="button" onclick="removeInvite('${email}', this)">×</button>
+    `;
+    document.getElementById('invite-tags').appendChild(tag);
+
+    document.getElementById('invite-input').value = '';
+    document.getElementById('user-suggestions').style.display = 'none';
+}
+
+// Remove invite
+function removeInvite(email, btn) {
+    invitedEmails = invitedEmails.filter(e => e !== email);
+    updateHiddenInput();
+    btn.parentElement.remove();
+}
+
+// Update hidden input
+function updateHiddenInput() {
+    document.getElementById('invite-emails-hidden').value = invitedEmails.join(',');
+}
+
+// Allow manual email entry
+document.getElementById('invite-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const email = this.value.trim().replace(',', '');
+        if (email && email.includes('@')) {
+            addInvite(email, email);
+        }
+    }
+});
+
+// Close suggestions on outside click
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.invite-wrap')) {
+        document.getElementById('user-suggestions').style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

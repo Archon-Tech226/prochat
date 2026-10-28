@@ -1,0 +1,82 @@
+{% extends 'owner/base.html' %}
+
+{% block title %}Users — Owner ProChat{% endblock %}
+{% block page_title %}All Users{% endblock %}
+{% block nav_users %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-bar { display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap; }
+.search-bar input,.search-bar select { background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:var(--text);font-family:var(--font);outline:none; }
+.search-bar input { flex:1;min-width:200px; }
+.plan-badge { display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700; }
+.plan-free_trial { background:#ffffff10;color:var(--text3); }
+.plan-pro        { background:var(--violet-dim);color:var(--violet-light);border:1px solid var(--border3); }
+.plan-team       { background:var(--green-dim);color:var(--green); }
+.plan-company    { background:var(--amber-dim);color:var(--amber); }
+.plan-expired    { background:var(--red-dim);color:var(--red); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1 style="font-size:20px;font-weight:800;color:var(--text)">👥 All Users</h1>
+        <p style="font-size:13px;color:var(--text3);margin-top:2px">{{ profiles|length }} total users</p>
+    </div>
+</div>
+
+<form method="GET" class="search-bar">
+    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search by email...">
+    <select name="plan">
+        <option value="">All plans</option>
+        <option value="free_trial">Free Trial</option>
+        <option value="pro">Pro</option>
+        <option value="team">Team</option>
+        <option value="company">Company</option>
+        <option value="expired">Expired</option>
+    </select>
+    <select name="role">
+        <option value="">All roles</option>
+        <option value="student">Student</option>
+        <option value="freelancer">Freelancer</option>
+        <option value="worker">Worker</option>
+        <option value="company">Company</option>
+    </select>
+    <button type="submit" class="btn-primary">Search</button>
+</form>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>User</th><th>Email</th><th>Role</th>
+                <th>Plan</th><th>Trial days left</th>
+                <th>Joined</th><th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for profile in profiles %}
+            <tr>
+                <td style="font-weight:600;color:var(--text)">{{ profile.user.username }}</td>
+                <td>{{ profile.user.email }}</td>
+                <td><span class="badge badge-violet">{{ profile.role|title }}</span></td>
+                <td><span class="plan-badge plan-{{ profile.plan }}">{{ profile.plan|title }}</span></td>
+                <td>
+                    {% if profile.plan == 'free_trial' %}
+                    <span style="color:{% if profile.trial_days_remaining <= 2 %}var(--red){% elif profile.trial_days_remaining <= 5 %}var(--amber){% else %}var(--green){% endif %}">
+                        {{ profile.trial_days_remaining }} days
+                    </span>
+                    {% else %}—{% endif %}
+                </td>
+                <td>{{ profile.user.date_joined|date:"d M Y" }}</td>
+                <td><a href="{% url 'owner_user_detail' profile.user.id %}" class="btn-ghost" style="padding:4px 10px;font-size:11px">View →</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3)">No users found</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

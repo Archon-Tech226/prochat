@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Direct Messages — ProChat{% endblock %}
+{% block nav_chat %}active{% endblock %}
+{% block mob_chat %}active{% endblock %}
+{% block page_title %}Direct Messages{% endblock %}
+
+{% block extra_css %}
+<style>
+.dm-layout { display:flex;height:calc(100vh - 52px);margin:-24px; }
+.dm-users-panel { width:280px;border-right:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;flex-shrink:0; }
+.dm-header { padding:14px 16px;border-bottom:1px solid var(--border); }
+.dm-header h2 { font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px; }
+.dm-search { width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:var(--text);font-family:var(--font);outline:none; }
+.dm-search::placeholder { color:var(--text3); }
+.users-list { flex:1;overflow-y:auto;padding:8px; }
+.user-item { display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:background 0.15s;text-decoration:none; }
+.user-item:hover { background:var(--bg3); }
+.user-item.active { background:var(--violet-dim); }
+.user-avatar { width:36px;height:36px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0;position:relative; }
+.online-dot { position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--bg2); }
+.offline-dot { position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:var(--text3);border:2px solid var(--bg2); }
+.user-info { flex:1;min-width:0; }
+.user-name { font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.user-role { font-size:10px;color:var(--text3);margin-top:1px; }
+.dm-main { flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text3); }
+.dm-main span { font-size:48px; }
+.empty-dm { text-align:center;padding:40px 20px;color:var(--text3);font-size:13px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dm-layout">
+
+    <!-- Users Panel -->
+    <div class="dm-users-panel">
+        <div class="dm-header">
+            <h2>💬 Direct Messages</h2>
+            <input type="text" class="dm-search" placeholder="Search users..."
+                oninput="filterUsers(this.value)" id="user-search">
+        </div>
+
+        <div class="users-list" id="users-list">
+            {% if users %}
+                {% for user in users %}
+                <a href="{% url 'dm_view' user.id %}" class="user-item" id="user-{{ user.id }}">
+                    <div class="user-avatar">
+                        {{ user.username|first|upper }}
+                        {% if user.userprofile.is_online %}
+                        <div class="online-dot"></div>
+                        {% else %}
+                        <div class="offline-dot"></div>
+                        {% endif %}
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">{{ user.username }}</div>
+                        <div class="user-role">
+                            {% if user.userprofile.is_online %}
+                            <span style="color:var(--green)">● Online</span>
+                            {% else %}
+                            <span>{{ user.userprofile.role|title }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="empty-dm">No users found</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Area -->
+    <div class="dm-main">
+        <span>💬</span>
+        <div style="font-size:14px;font-weight:600;color:var(--text)">Select a user to chat</div>
+        <div style="font-size:13px">Choose someone from the list to start a conversation</div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterUsers(query) {
+    const items = document.querySelectorAll('.user-item');
+    items.forEach(item => {
+        const name = item.querySelector('.user-name').textContent.toLowerCase();
+        item.style.display = name.includes(query.toLowerCase()) ? 'flex' : 'none';
+    });
+}
+</script>
+{% endblock %}

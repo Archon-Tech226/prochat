@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: prochat
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "daphne -p $PORT prochat.asgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: PYTHON_VERSION
+        value: 3.11.9

@@ -1,0 +1,147 @@
+/* ── Tasks Layout ── */
+.tasks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.tasks-header h1 { font-size: 20px; font-weight: 800; color: var(--text); }
+
+/* ── Filter Tabs ── */
+.filter-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-tab {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    background: var(--bg3);
+    transition: all 0.15s;
+}
+.filter-tab.active,
+.filter-tab:hover {
+    background: var(--violet-dim);
+    color: var(--violet-light);
+    border-color: var(--border3);
+}
+
+/* ── Task Card ── */
+.task-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s;
+}
+.task-card:hover { border-color: var(--border3); }
+
+/* ── Checkbox ── */
+.task-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 2px solid var(--border2);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.task-check:hover { border-color: var(--violet); }
+.task-check.done {
+    background: var(--violet);
+    border-color: var(--violet);
+}
+.task-check.done::after {
+    content: '✓';
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ── Task Body ── */
+.task-body { flex: 1; }
+.task-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+.task-title.done {
+    text-decoration: line-through;
+    color: var(--text3);
+}
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+.task-due { font-size: 11px; color: var(--text3); }
+.task-due.overdue { color: var(--red); }
+.task-due.today { color: var(--amber); }
+
+/* ── Priority Dot ── */
+.priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.priority-low    { background: var(--green); }
+.priority-medium { background: var(--amber); }
+.priority-high   { background: var(--red); }
+.priority-urgent { background: var(--red); animation: pulse 1s infinite; }
+
+/* ── Task Actions ── */
+.task-actions {
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.task-card:hover .task-actions { opacity: 1; }
+.task-del {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+.task-del:hover { color: var(--red); background: var(--red-dim); }
+
+/* ── AI Suggestion Banner ── */
+.ai-suggestion {
+    background: var(--violet-dim);
+    border: 1px solid var(--border3);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--violet-light);
+}
+
+/* ── Empty State ── */
+.empty-tasks {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+}
+.empty-tasks span {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 12px;
+}

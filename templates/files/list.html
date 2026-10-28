@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Files — ProChat{% endblock %}
+{% block nav_files %}active{% endblock %}
+{% block page_title %}Files{% endblock %}
+
+{% block extra_css %}
+<style>
+.files-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:20px; }
+.upload-zone { border:2px dashed var(--border3);border-radius:var(--radius);padding:30px;text-align:center;margin-bottom:20px;cursor:pointer;transition:all 0.2s;background:var(--violet-dim); }
+.upload-zone:hover { border-color:var(--violet);background:var(--bg3); }
+.upload-zone span { font-size:32px;display:block;margin-bottom:8px; }
+.upload-zone p { font-size:13px;color:var(--text3); }
+.upload-zone strong { color:var(--violet-light); }
+.files-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px; }
+.file-card { background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;transition:border-color 0.2s; }
+.file-card:hover { border-color:var(--border3); }
+.file-icon { width:40px;height:40px;border-radius:8px;background:var(--violet-dim);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px; }
+.file-name { font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.file-meta { font-size:11px;color:var(--text3); }
+.file-actions { display:flex;gap:6px;margin-top:10px; }
+.progress-bar { height:3px;background:var(--border2);border-radius:2px;margin-top:8px;display:none; }
+.progress-fill { height:100%;background:var(--violet);border-radius:2px;width:0;transition:width 0.3s; }
+.empty-files { text-align:center;padding:60px 20px;color:var(--text3); }
+.empty-files span { font-size:48px;display:block;margin-bottom:12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="files-header">
+    <div>
+        <h1 style="font-size:20px;font-weight:800;color:var(--text)">📁 Files</h1>
+        <p style="font-size:13px;color:var(--text3);margin-top:2px">{{ files|length }} files uploaded</p>
+    </div>
+</div>
+
+<!-- Upload Zone -->
+<div class="upload-zone" onclick="document.getElementById('file-input').click()">
+    <span>📤</span>
+    <p>Click to upload or drag & drop files here</p>
+    <p><strong>Any file type supported</strong></p>
+    <div class="progress-bar" id="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+</div>
+<input type="file" id="file-input" style="display:none" multiple>
+
+<!-- Files Grid -->
+{% if files %}
+<div class="files-grid" id="files-grid">
+    {% for file in files %}
+    <div class="file-card">
+        <div class="file-icon">
+            {% if 'image' in file.file_type %}🖼
+            {% elif 'pdf' in file.file_type %}📄
+            {% elif 'video' in file.file_type %}🎥
+            {% elif 'audio' in file.file_type %}🎵
+            {% else %}📎{% endif %}
+        </div>
+        <div class="file-name" title="{{ file.file_name }}">{{ file.file_name }}</div>
+        <div class="file-meta">
+            {{ file.file_size|filesizeformat }} &nbsp;·&nbsp; {{ file.created_at|timesince }} ago
+        </div>
+        <div class="file-actions">
+            <a href="{{ file.file.url }}" download class="btn-ghost" style="padding:4px 10px;font-size:11px">↓ Download</a>
+            <form method="POST" action="{% url 'delete_file' file.id %}" style="display:inline" onsubmit="return confirm('Delete this file?')">
+                {% csrf_token %}
+                <button type="submit" class="btn-danger" style="padding:4px 8px;font-size:11px">🗑</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-files">
+    <span>📁</span>
+    No files yet. Upload your first file!
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('file-input').addEventListener('change', function(e) {
+    const files = e.target.files;
+    if (!files.length) return;
+
+    const progressBar = document.getElementById('progress-bar');
+    const progressFill = document.getElementById('progress-fill');
+    progressBar.style.display = 'block';
+
+    Array.from(files).forEach(file => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.upload.onprogress = (e) => {
+            const pct = (e.loaded / e.total) * 100;
+            progressFill.style.width = pct + '%';
+        };
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                progressBar.style.display = 'none';
+                progressFill.style.width = '0';
+                location.reload();
+            }
+        };
+        xhr.open('POST', '{% url "upload_file" %}');
+        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+        xhr.send(formData);
+    });
+});
+
+// Drag and drop
+const zone = document.querySelector('.upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--violet)'; });
+zone.addEventListener('dragleave', () => { zone.style.borderColor = 'var(--border3)'; });
+zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.style.borderColor = 'var(--border3)';
+    document.getElementById('file-input').files = e.dataTransfer.files;
+    document.getElementById('file-input').dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}

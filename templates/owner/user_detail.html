@@ -1,0 +1,86 @@
+{% extends 'owner/base.html' %}
+
+{% block title %}User Detail — Owner ProChat{% endblock %}
+{% block page_title %}User Detail{% endblock %}
+{% block nav_users %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 style="font-size:20px;font-weight:800;color:var(--text)">{{ profile.user.username }}</h1>
+        <p style="font-size:13px;color:var(--text3);margin-top:2px">{{ profile.user.email }}</p>
+    </div>
+    <a href="{% url 'owner_users' %}" class="btn-ghost">← All Users</a>
+</div>
+
+<div class="grid-2">
+    <!-- Profile Info -->
+    <div class="card">
+        <h2 style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">Profile</h2>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+                <span style="color:var(--text3)">Email</span>
+                <span style="color:var(--text)">{{ profile.user.email }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+                <span style="color:var(--text3)">Role</span>
+                <span class="badge badge-violet">{{ profile.role|title }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+                <span style="color:var(--text3)">Plan</span>
+                <span style="color:var(--violet-light);font-weight:600">{{ profile.plan|title }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+                <span style="color:var(--text3)">Trial days left</span>
+                <span style="color:var(--amber)">{{ profile.trial_days_remaining }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0">
+                <span style="color:var(--text3)">Joined</span>
+                <span style="color:var(--text2)">{{ profile.user.date_joined|date:"d M Y" }}</span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Change Plan -->
+        <h3 style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">Change Plan</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display:flex;gap:8px">
+                <select name="plan" class="form-input" style="flex:1">
+                    <option value="free_trial" {% if profile.plan == 'free_trial' %}selected{% endif %}>Free Trial</option>
+                    <option value="pro"        {% if profile.plan == 'pro' %}selected{% endif %}>Pro</option>
+                    <option value="team"       {% if profile.plan == 'team' %}selected{% endif %}>Team</option>
+                    <option value="company"    {% if profile.plan == 'company' %}selected{% endif %}>Company</option>
+                    <option value="expired"    {% if profile.plan == 'expired' %}selected{% endif %}>Expired</option>
+                </select>
+                <button type="submit" class="btn-primary">Update</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Payment History -->
+    <div class="card">
+        <h2 style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px">Payment History</h2>
+        {% if payments %}
+        <div style="display:flex;flex-direction:column;gap:8px">
+            {% for payment in payments %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+                <div>
+                    <div style="font-size:13px;font-weight:600;color:{% if payment.status == 'paid' %}var(--green){% elif payment.status == 'failed' %}var(--red){% else %}var(--amber){% endif %}">
+                        ₹{{ payment.amount }}
+                    </div>
+                    <div style="font-size:11px;color:var(--text3)">{{ payment.created_at|date:"d M Y" }}</div>
+                </div>
+                <span class="badge {% if payment.status == 'paid' %}badge-green{% elif payment.status == 'failed' %}badge-red{% else %}badge-amber{% endif %}">
+                    {{ payment.status|title }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:13px;color:var(--text3)">No payments yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

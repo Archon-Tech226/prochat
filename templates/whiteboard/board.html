@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Whiteboard — {{ board.name }} — ProChat{% endblock %}
+{% block page_title %}{{ board.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.board-layout { display:flex;flex-direction:column;height:calc(100vh - 52px);margin:-24px; }
+.board-toolbar { padding:8px 16px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.tool-btn { padding:6px 12px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);transition:all 0.15s; }
+.tool-btn.active,.tool-btn:hover { background:var(--violet-dim);color:var(--violet-light);border-color:var(--border3); }
+.color-picker { width:28px;height:28px;border-radius:50%;border:2px solid var(--border2);cursor:pointer;padding:0;background:none; }
+.brush-size { width:60px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:4px 8px;font-size:12px;color:var(--text);font-family:var(--font); }
+.board-canvas-wrap { flex:1;overflow:hidden;position:relative;background:var(--bg);background-image:radial-gradient(circle,#ffffff08 1px,transparent 1px);background-size:24px 24px; }
+#board-canvas { position:absolute;top:0;left:0;cursor:crosshair; }
+.users-online { margin-left:auto;font-size:12px;color:var(--text3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="board-layout">
+
+    <!-- Toolbar -->
+    <div class="board-toolbar">
+        <button class="tool-btn active" onclick="setTool('pen', this)">✏ Draw</button>
+        <button class="tool-btn" onclick="setTool('eraser', this)">⌫ Erase</button>
+        <button class="tool-btn" onclick="setTool('line', this)">╱ Line</button>
+        <button class="tool-btn" onclick="setTool('rect', this)">▭ Rectangle</button>
+        <input type="color" class="color-picker" id="color-picker" value="#c4a0ff" title="Color">
+        <input type="range" class="brush-size" id="brush-size" min="1" max="20" value="3" title="Brush size">
+        <button class="tool-btn" onclick="clearBoard()" style="color:var(--red);border-color:var(--red)">🗑 Clear</button>
+        <div class="users-online" id="users-online">1 user online</div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="board-canvas-wrap" id="canvas-wrap">
+        <canvas id="board-canvas"></canvas>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const boardId = {{ board.id }};
+const currentUser = "{{ request.user.username }}";
+const wsUrl = `ws://${window.location.host}/ws/whiteboard/${boardId}/`;
+
+// Canvas setup
+const wrap = document.getElementById('canvas-wrap');
+const canvas = document.getElementById('board-canvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+    canvas.width = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Drawing state
+let isDrawing = false;
+let currentTool = 'pen';
+let lastX = 0, lastY = 0;
+let startX = 0, startY = 0;
+
+// WebSocket
+const ws = new WebSocket(wsUrl);
+
+ws.onopen = () => console.log('Whiteboard connected');
+
+ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'stroke') {
+        drawStroke(data.stroke);
+    } else if (data.type === 'cleared') {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    } else if (data.type === 'existing_strokes') {
+        data.strokes.forEach(s => drawStroke(s));
+    }
+};
+
+// Tool functions
+function setTool(tool, btn) {
+    currentTool = tool;
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    canvas.style.cursor = tool === 'eraser' ? 'cell' : 'crosshair';
+}
+
+function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+}
+
+// Mouse events
+canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    const pos = getPos(e);
+    lastX = startX = pos.x;
+    lastY = startY = pos.y;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (!isDrawing) return;
+    const pos = getPos(e);
+    const stroke = {
+        tool: currentTool,
+        color: document.getElementById('color-picker').value,
+        size: parseInt(document.getElementById('brush-size').value),
+        fromX: lastX, fromY: lastY,
+        toX: pos.x, toY: pos.y,
+    };
+    drawStroke(stroke);
+    if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'stroke', stroke }));
+    lastX = pos.x;
+    lastY = pos.y;
+});
+
+canvas.addEventListener('mouseup', () => isDrawing = false);
+canvas.addEventListener('mouseleave', () => isDrawing = false);
+
+function drawStroke(stroke) {
+    ctx.beginPath();
+    ctx.moveTo(stroke.fromX, stroke.fromY);
+    ctx.lineTo(stroke.toX, stroke.toY);
+    ctx.strokeStyle = stroke.tool === 'eraser' ? getComputedStyle(document.documentElement).getPropertyValue('--bg') : stroke.color;
+    ctx.lineWidth = stroke.tool === 'eraser' ? stroke.size * 3 : stroke.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+}
+
+function clearBoard() {
+    if (!confirm('Clear the entire board?')) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'clear' }));
+}
+</script>
+{% endblock %}

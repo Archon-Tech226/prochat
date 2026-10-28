@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Tasks — ProChat{% endblock %}
+{% block nav_tasks %}active{% endblock %}
+{% block mob_tasks %}active{% endblock %}
+{% block page_title %}My Tasks{% endblock %}
+
+{% block extra_css %}
+<style>
+.tasks-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:20px; }
+.tasks-header h1 { font-size:20px;font-weight:800;color:var(--text); }
+.filter-tabs { display:flex;gap:6px;margin-bottom:16px; }
+.filter-tab { padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);color:var(--text3);background:var(--bg3); }
+.filter-tab.active { background:var(--violet-dim);color:var(--violet-light);border-color:var(--border3); }
+.task-card { background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:border-color 0.2s; }
+.task-card:hover { border-color:var(--border3); }
+.task-check { width:18px;height:18px;border-radius:5px;border:2px solid var(--border2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s; }
+.task-check.done { background:var(--violet);border-color:var(--violet); }
+.task-check.done::after { content:'✓';color:white;font-size:11px; }
+.task-body { flex:1; }
+.task-title { font-size:13px;font-weight:600;color:var(--text); }
+.task-title.done { text-decoration:line-through;color:var(--text3); }
+.task-meta { display:flex;align-items:center;gap:10px;margin-top:4px; }
+.task-due { font-size:11px;color:var(--text3); }
+.task-due.overdue { color:var(--red); }
+.task-due.today { color:var(--amber); }
+.priority-dot { width:8px;height:8px;border-radius:50%; }
+.priority-low { background:#10d98a; }
+.priority-medium { background:#f5a623; }
+.priority-high { background:#f04f6e; }
+.priority-urgent { background:#f04f6e;animation:pulse 1s infinite; }
+.task-actions { display:flex;gap:6px;opacity:0;transition:opacity 0.2s; }
+.task-card:hover .task-actions { opacity:1; }
+.task-del { background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px; }
+.task-del:hover { color:var(--red); }
+.ai-suggestion { background:var(--violet-dim);border:1px solid var(--border3);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px; }
+.ai-suggestion span { font-size:13px;color:var(--violet-light); }
+.empty-tasks { text-align:center;padding:60px 20px;color:var(--text3); }
+.empty-tasks span { font-size:48px;display:block;margin-bottom:12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="tasks-header">
+    <div>
+        <h1>✓ Tasks</h1>
+        <div style="font-size:13px;color:var(--text3);margin-top:2px">
+            {{ tasks|length }} total tasks
+        </div>
+    </div>
+    <a href="{% url 'create_task' %}" class="btn-primary">+ Add Task</a>
+</div>
+
+<!-- AI Suggestion Banner -->
+<div class="ai-suggestion">
+    <span>✦</span>
+    <span>AI can suggest tasks based on your role. <a href="{% url 'ai_chat' %}" style="color:var(--violet-light);font-weight:600">Ask AI →</a></span>
+</div>
+
+<!-- Filter Tabs -->
+<div class="filter-tabs">
+    <div class="filter-tab active" onclick="filterTasks('all')">All ({{ tasks|length }})</div>
+    <div class="filter-tab" onclick="filterTasks('todo')">To Do</div>
+    <div class="filter-tab" onclick="filterTasks('in_progress')">In Progress</div>
+    <div class="filter-tab" onclick="filterTasks('done')">Done</div>
+</div>
+
+<!-- Task List -->
+<div id="task-list">
+    {% if tasks %}
+        {% for task in tasks %}
+        <div class="task-card" data-status="{{ task.status }}" id="task-{{ task.id }}">
+
+            <!-- Checkbox -->
+            <div class="task-check {% if task.status == 'done' %}done{% endif %}"
+                 onclick="completeTask({{ task.id }}, this)"
+                 id="check-{{ task.id }}">
+            </div>
+
+            <!-- Task Body -->
+            <div class="task-body">
+                <div class="task-title {% if task.status == 'done' %}done{% endif %}">
+                    {{ task.title }}
+                    {% if task.ai_suggested %}
+                        <span style="font-size:10px;color:var(--violet-light);margin-left:6px">✦ AI</span>
+                    {% endif %}
+                </div>
+                <div class="task-meta">
+                    <div class="priority-dot priority-{{ task.priority }}"></div>
+                    <span style="font-size:11px;color:var(--text3)">{{ task.priority|title }}</span>
+                    {% if task.due_date %}
+                    <span class="task-due {% if task.status == 'overdue' %}overdue{% endif %}">
+                        📅 {{ task.due_date }}
+                    </span>
+                    {% endif %}
+                    <span class="badge badge-{% if task.status == 'done' %}green{% elif task.status == 'overdue' %}red{% else %}violet{% endif %}">
+                        {{ task.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="task-actions">
+                <form method="POST" action="{% url 'delete_task' task.id %}" style="display:inline">
+                    {% csrf_token %}
+                    <button type="submit" class="task-del" title="Delete">🗑</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-tasks">
+            <span>✓</span>
+            No tasks yet. Add your first task!
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function completeTask(taskId, el) {
+    fetch(`/tasks/${taskId}/complete/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+    }).then(res => res.json()).then(data => {
+        if (data.status === 'ok') {
+            el.classList.add('done');
+            const title = document.querySelector(`#task-${taskId} .task-title`);
+            if (title) title.classList.add('done');
+        }
+    });
+}
+
+function filterTasks(status) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+
+    document.querySelectorAll('.task-card').forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

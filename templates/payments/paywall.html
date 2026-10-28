@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Upgrade — ProChat{% endblock %}
+{% block page_title %}Upgrade Plan{% endblock %}
+
+{% block extra_css %}
+<style>
+.paywall-header { text-align:center;margin-bottom:40px; }
+.paywall-header h1 { font-size:28px;font-weight:800;color:var(--text);margin-bottom:8px; }
+.paywall-header p { font-size:14px;color:var(--text3); }
+.trial-expired-banner { background:var(--red-dim);border:1px solid var(--red);border-radius:var(--radius);padding:14px 20px;text-align:center;margin-bottom:28px;font-size:14px;color:var(--red);font-weight:600; }
+.plans-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:900px;margin:0 auto; }
+.plan-card { background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;text-align:center;position:relative;transition:all 0.2s; }
+.plan-card:hover { border-color:var(--border3); }
+.plan-card.popular { border-color:var(--violet);background:var(--violet-dim); }
+.popular-badge { position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--violet);color:white;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px; }
+.plan-name { font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px; }
+.plan-price { font-size:32px;font-weight:800;color:var(--text);margin:12px 0 4px; }
+.plan-price span { font-size:14px;font-weight:400;color:var(--text3); }
+.plan-users { font-size:12px;color:var(--text3);margin-bottom:16px; }
+.plan-features { list-style:none;text-align:left;margin-bottom:20px; }
+.plan-features li { padding:6px 0;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border); }
+.plan-features li:last-child { border-bottom:none; }
+.plan-features li::before { content:'✓';color:var(--green);font-weight:700;flex-shrink:0; }
+.plan-btn { width:100%;padding:12px;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:var(--font);transition:all 0.2s; }
+.plan-btn.primary { background:var(--violet);color:white; }
+.plan-btn.primary:hover { background:var(--violet2); }
+.plan-btn.ghost { background:var(--bg3);color:var(--text2);border:1px solid var(--border2); }
+.plan-btn.ghost:hover { background:var(--bg4); }
+
+@media(max-width:768px) { .plans-grid { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="paywall-header">
+    {% if profile.plan == 'expired' %}
+    <div class="trial-expired-banner">
+        ⚠️ Your 15-day free trial has ended. Upgrade to continue using ProChat.
+    </div>
+    {% endif %}
+    <h1>Choose your plan</h1>
+    <p>All plans include all 24 features. Cancel anytime.</p>
+</div>
+
+<div class="plans-grid">
+
+    <!-- Pro Plan -->
+    <div class="plan-card popular">
+        <div class="popular-badge">Most Popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">₹499<span>/month</span></div>
+        <div class="plan-users">1 user</div>
+        <ul class="plan-features">
+            <li>All 24 features</li>
+            <li>AI chatbot & translator</li>
+            <li>Video meetings</li>
+            <li>Portfolio builder</li>
+            <li>Job board access</li>
+            <li>10GB file storage</li>
+        </ul>
+        <button class="plan-btn primary" onclick="startPayment('pro', 49900)">Upgrade to Pro →</button>
+    </div>
+
+    <!-- Team Plan -->
+    <div class="plan-card">
+        <div class="plan-name">Team</div>
+        <div class="plan-price">₹1,499<span>/month</span></div>
+        <div class="plan-users">Up to 20 members</div>
+        <ul class="plan-features">
+            <li>Everything in Pro</li>
+            <li>Multi-team management</li>
+            <li>Whiteboard canvas</li>
+            <li>Shared file library</li>
+            <li>Team analytics</li>
+            <li>50GB file storage</li>
+        </ul>
+        <button class="plan-btn ghost" onclick="startPayment('team', 149900)">Upgrade to Team →</button>
+    </div>
+
+    <!-- Company Plan -->
+    <div class="plan-card">
+        <div class="plan-name">Company</div>
+        <div class="plan-price">₹4,999<span>/month</span></div>
+        <div class="plan-users">Unlimited members</div>
+        <ul class="plan-features">
+            <li>Everything in Team</li>
+            <li>In-app payments</li>
+            <li>Hiring board</li>
+            <li>Brand color themes</li>
+            <li>Admin controls</li>
+            <li>500GB file storage</li>
+        </ul>
+        <button class="plan-btn ghost" onclick="startPayment('company', 499900)">Upgrade to Company →</button>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+async function startPayment(plan, amount) {
+    const res = await fetch('/payments/create-order/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ plan, amount })
+    });
+    const data = await res.json();
+
+    const rzp = new Razorpay({
+        key: data.key,
+        amount: data.amount,
+        currency: 'INR',
+        order_id: data.order_id,
+        name: 'ProChat',
+        description: `ProChat ${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan`,
+        theme: { color: '#7c3aed' },
+        handler: function(response) {
+            window.location.href = '/payments/success/';
+        },
+        prefill: {
+            email: '{{ request.user.email }}',
+            name: '{{ request.user.username }}'
+        }
+    });
+    rzp.open();
+}
+</script>
+{% endblock %}

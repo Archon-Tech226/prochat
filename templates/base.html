@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ProChat{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/workspace.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+{% if user.is_authenticated %}
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-logo">
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">ProChat</span>
+    </div>
+
+    <div class="sidebar-profile">
+        <div class="profile-avatar">
+            {% if user.userprofile.avatar %}
+                <img src="{{ user.userprofile.avatar.url }}" alt="avatar">
+            {% else %}
+                {{ user.username|first|upper }}
+            {% endif %}
+        </div>
+        <div class="profile-info">
+            <div class="profile-name">{{ user.username }}</div>
+            <div class="profile-role {{ user.userprofile.role }}">{{ user.userprofile.role|title }}</div>
+        </div>
+        <div class="profile-status online"></div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section">Main</div>
+        <a href="{% url 'workspace' %}" class="nav-item {% block nav_home %}{% endblock %}">
+            <span class="nav-icon">🏠</span> Home
+        </a>
+        <a href="{% url 'group_list' %}" class="nav-item {% block nav_chat %}{% endblock %}">
+            <span class="nav-icon">💬</span> Teams
+            <span class="nav-badge" id="unread-badge" style="display:none">0</span>
+        </a>
+        <a href="{% url 'dm_list' %}" class="nav-item {% block nav_dm %}{% endblock %}">
+            <span class="nav-icon">✉</span> Direct Messages
+        </a>
+        <a href="{% url 'task_list' %}" class="nav-item {% block nav_tasks %}{% endblock %}">
+            <span class="nav-icon">✓</span> Tasks
+        </a>
+        <a href="{% url 'file_list' %}" class="nav-item {% block nav_files %}{% endblock %}">
+            <span class="nav-icon">📁</span> Files
+        </a>
+        <a href="{% url 'ai_chat' %}" class="nav-item {% block nav_ai %}{% endblock %}">
+            <span class="nav-icon">✦</span> AI Assistant
+        </a>
+        <a href="{% url 'meeting_list' %}" class="nav-item {% block nav_meetings %}{% endblock %}">
+            <span class="nav-icon">📹</span> Meetings
+        </a>
+
+        <div class="nav-section">Tools</div>
+        <a href="{% url 'create_board' %}" class="nav-item">
+            <span class="nav-icon">✏</span> Whiteboard
+        </a>
+        <a href="{% url 'job_list' %}" class="nav-item">
+            <span class="nav-icon">💼</span> Job Board
+        </a>
+
+        {% if user.userprofile.plan == 'free_trial' %}
+        <div class="trial-banner">
+            <div class="trial-days">{{ user.userprofile.trial_days_remaining }} days left</div>
+            <a href="{% url 'paywall' %}" class="trial-upgrade">Upgrade →</a>
+        </div>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="{% url 'settings' %}" class="nav-item">
+            <span class="nav-icon">⚙</span> Settings
+        </a>
+        <a href="{% url 'logout' %}" class="nav-item">
+            <span class="nav-icon">↩</span> Logout
+        </a>
+    </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main-wrapper">
+    <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title">{% block page_title %}ProChat{% endblock %}</div>
+        <div class="topbar-actions">
+            <div class="notif-bell" onclick="toggleNotifications()">
+                🔔
+                <span class="notif-count" id="notif-count" style="display:none">0</span>
+            </div>
+            <a href="{% url 'create_meeting' %}" class="btn-primary">⬤ Meeting</a>
+        </div>
+    </header>
+
+    <div class="notif-dropdown" id="notif-dropdown" style="display:none">
+        <div class="notif-header">
+            Notifications
+            <button onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div id="notif-list"></div>
+    </div>
+
+    <main class="page-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+{% else %}
+<main>
+    {% block auth_content %}{% endblock %}
+</main>
+{% endif %}
+
+<!-- ── MOBILE BOTTOM NAV ── -->
+{% if user.is_authenticated %}
+<nav class="mobile-bottom-nav">
+    <a href="{% url 'workspace' %}" class="mobile-nav-item {% block mob_home %}{% endblock %}">
+        <span>🏠</span><small>Home</small>
+    </a>
+    <a href="{% url 'group_list' %}" class="mobile-nav-item {% block mob_chat %}{% endblock %}">
+        <span>💬</span><small>Teams</small>
+    </a>
+    <a href="{% url 'dm_list' %}" class="mobile-nav-item {% block mob_dm %}{% endblock %}">
+        <span>✉</span><small>DMs</small>
+    </a>
+    <a href="{% url 'ai_chat' %}" class="mobile-nav-item {% block mob_ai %}{% endblock %}">
+        <span>✦</span><small>AI</small>
+    </a>
+    <a href="{% url 'settings' %}" class="mobile-nav-item {% block mob_more %}{% endblock %}">
+        <span>⚙</span><small>More</small>
+    </a>
+</nav>
+{% endif %}
+
+{% load static %}
+<script src="{% static 'js/notifications.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
+{% block extra_js %}{% endblock %}
+
+<script>
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+function toggleNotifications() {
+    const dropdown = document.getElementById('notif-dropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+function markAllRead() {
+    fetch("{% url 'mark_read' %}", {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+    }).then(() => {
+        document.getElementById('notif-count').style.display = 'none';
+        document.getElementById('unread-badge').style.display = 'none';
+    });
+}
+</script>
+</body>
+</html>

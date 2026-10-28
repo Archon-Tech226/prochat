@@ -1,0 +1,66 @@
+{% extends 'owner/base.html' %}
+
+{% block title %}Payments — Owner ProChat{% endblock %}
+{% block page_title %}Payment History{% endblock %}
+{% block nav_payments %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 style="font-size:20px;font-weight:800;color:var(--text)">💳 Payments</h1>
+        <p style="font-size:13px;color:var(--text3);margin-top:2px">All transactions</p>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>User</th><th>Amount</th><th>Plan</th>
+                <th>Method</th><th>Razorpay ID</th>
+                <th>Date</th><th>Status</th><th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td style="font-weight:600;color:var(--text)">{{ payment.user.username }}</td>
+                <td style="font-weight:700;color:{% if payment.status == 'paid' %}var(--green){% elif payment.status == 'failed' %}var(--red){% else %}var(--amber){% endif %}">
+                    ₹{{ payment.amount }}
+                </td>
+                <td>{{ payment.subscription.plan|default:"—"|title }}</td>
+                <td>{{ payment.payment_method|default:"—"|title }}</td>
+                <td style="font-family:monospace;font-size:11px;color:var(--text3)">{{ payment.razorpay_payment_id|default:"—" }}</td>
+                <td>{{ payment.created_at|date:"d M Y, H:i" }}</td>
+                <td>
+                    <span class="badge {% if payment.status == 'paid' %}badge-green{% elif payment.status == 'failed' %}badge-red{% else %}badge-amber{% endif %}">
+                        {{ payment.status|title }}
+                    </span>
+                </td>
+                <td>
+                    {% if payment.status == 'paid' %}
+                    <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="refundPayment({{ payment.id }})">Refund</button>
+                    {% else %}—{% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text3)">No payments yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function refundPayment(paymentId) {
+    if (!confirm('Refund this payment?')) return;
+    fetch(`/owner/payments/${paymentId}/refund/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+    }).then(res => res.json()).then(data => {
+        if (data.status === 'ok') { alert('Refund successful!'); location.reload(); }
+    });
+}
+</script>
+{% endblock %}

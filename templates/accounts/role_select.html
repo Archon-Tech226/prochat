@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Choose Your Role — ProChat{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-page {
+    min-height: 100vh;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    margin: -24px;
+}
+.auth-card {
+    width: 100%;
+    max-width: 520px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+}
+.auth-logo {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.auth-logo h1 { font-size: 22px; font-weight: 800; color: var(--text); }
+.auth-logo p { font-size: 13px; color: var(--text3); margin-top: 4px; }
+.roles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.role-card {
+    background: var(--bg3);
+    border: 2px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    position: relative;
+}
+.role-card:hover {
+    border-color: var(--violet);
+    background: var(--violet-dim);
+}
+.role-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+}
+.role-card input[type="radio"]:checked + .role-content {
+    color: var(--violet-light);
+}
+.role-card:has(input:checked) {
+    border-color: var(--violet);
+    background: var(--violet-dim);
+}
+.role-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+.role-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.role-desc { font-size: 11px; color: var(--text3); line-height: 1.4; }
+.submit-btn {
+    width: 100%;
+    background: var(--violet);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: background 0.2s;
+}
+.submit-btn:hover { background: var(--violet2); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card fade-up">
+
+        <div class="auth-logo">
+            <span style="font-size:36px;color:var(--violet);display:block;margin-bottom:8px">⬡</span>
+            <h1>Welcome to ProChat!</h1>
+            <p>Choose your role to personalise your workspace</p>
+        </div>
+
+        <form method="POST" action="{% url 'role_select' %}">
+            {% csrf_token %}
+            <div class="roles-grid">
+
+                <label class="role-card">
+                    <input type="radio" name="role" value="student" required>
+                    <div class="role-content">
+                        <span class="role-icon">🎓</span>
+                        <div class="role-name">Student</div>
+                        <div class="role-desc">Assignments, study groups, AI doubt solver</div>
+                    </div>
+                </label>
+
+                <label class="role-card">
+                    <input type="radio" name="role" value="freelancer">
+                    <div class="role-content">
+                        <span class="role-icon">💼</span>
+                        <div class="role-name">Freelancer</div>
+                        <div class="role-desc">Clients, portfolio, invoices, job board</div>
+                    </div>
+                </label>
+
+                <label class="role-card">
+                    <input type="radio" name="role" value="worker">
+                    <div class="role-content">
+                        <span class="role-icon">🧑‍💻</span>
+                        <div class="role-name">Worker</div>
+                        <div class="role-desc">Tasks, shifts, meetings, AI reports</div>
+                    </div>
+                </label>
+
+                <label class="role-card">
+                    <input type="radio" name="role" value="company">
+                    <div class="role-content">
+                        <span class="role-icon">🏢</span>
+                        <div class="role-name">Company</div>
+                        <div class="role-desc">Teams, channels, HR, hiring board</div>
+                    </div>
+                </label>
+
+            </div>
+
+            <button type="submit" class="submit-btn">Enter ProChat →</button>
+        </form>
+
+    </div>
+</div>
+{% endblock %}

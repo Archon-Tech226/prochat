@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP | ProChat</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #0b1020;
+            color: #ffffff;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            padding: 32px;
+            border: 1px solid #29344d;
+            border-radius: 18px;
+            background: #151d30;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 28px;
+        }
+
+        p {
+            color: #b9c4d9;
+            line-height: 1.6;
+        }
+
+        input {
+            width: 100%;
+            margin: 18px 0;
+            padding: 15px;
+            border: 1px solid #44516d;
+            border-radius: 10px;
+            background: #0b1020;
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #5875ff;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #405de0;
+        }
+
+        .message {
+            margin: 12px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: #26334b;
+            color: #ffd6d6;
+        }
+
+        .email {
+            overflow-wrap: anywhere;
+            color: #91a8ff;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #b9c4d9;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="card">
+        <h1>Verify your email</h1>
+
+        <p>
+            Enter the six-digit OTP sent to:
+        </p>
+
+        <p class="email">{{ email }}</p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'verify_otp' %}">
+            {% csrf_token %}
+
+            <label for="otp">Six-digit OTP</label>
+
+            <input
+                id="otp"
+                type="text"
+                name="otp"
+                inputmode="numeric"
+                pattern="[0-9]{6}"
+                maxlength="6"
+                minlength="6"
+                autocomplete="one-time-code"
+                placeholder="000000"
+                required
+                autofocus
+            >
+
+            <button type="submit">Verify OTP</button>
+        </form>
+
+        <a href="{% url 'login' %}">Back to login</a>
+    </main>
+</body>
+</html>

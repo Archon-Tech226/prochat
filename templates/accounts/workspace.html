@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home — ProChat{% endblock %}
+{% block nav_home %}active{% endblock %}
+{% block mob_home %}active{% endblock %}
+{% block page_title %}Home{% endblock %}
+
+{% block extra_css %}
+<style>
+.welcome-text { font-size: 13px; color: var(--text3); margin-bottom: 20px; }
+.welcome-text span { color: var(--text); font-weight: 600; }
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.activity-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+.activity-card h3 { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+.activity-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.act-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.act-text { flex: 1; font-size: 13px; color: var(--text2); }
+.act-text a { color: var(--violet-light); }
+.act-time { font-size: 11px; color: var(--text3); }
+.quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+.qa-btn { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 14px 12px; text-align: center; cursor: pointer; transition: all 0.2s; display: block; }
+.qa-btn:hover { border-color: var(--violet); background: var(--violet-dim); }
+.qa-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+.qa-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+.upcoming-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 16px; }
+.meeting-item { background: var(--bg3); border: 1px solid var(--border3); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; }
+.meeting-title { font-size: 13px; font-weight: 700; color: var(--violet-light); margin-bottom: 4px; }
+.meeting-info { font-size: 11px; color: var(--text3); }
+.no-meetings { font-size: 13px; color: var(--text3); text-align: center; padding: 20px; }
+
+@media (max-width: 768px) {
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .quick-actions { grid-template-columns: 1fr 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Welcome -->
+<div class="welcome-text">
+    Good day, <span>{{ user.username }}</span> 👋 &nbsp;·&nbsp;
+    {{ user.userprofile.role|title }} &nbsp;·&nbsp;
+    {% if profile.trial_days_remaining > 0 %}
+        <span style="color:var(--amber)">{{ profile.trial_days_remaining }} trial days remaining</span>
+    {% else %}
+        <span style="color:var(--green)">{{ user.userprofile.plan|title }} plan</span>
+    {% endif %}
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-label">My Tasks</div>
+        <div class="stat-value" id="task-count">—</div>
+        <div class="stat-sub neutral">due today</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Messages</div>
+        <div class="stat-value" id="msg-count">—</div>
+        <div class="stat-sub neutral">unread</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Meetings</div>
+        <div class="stat-value" id="meeting-count">—</div>
+        <div class="stat-sub neutral">upcoming</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Files</div>
+        <div class="stat-value" id="file-count">—</div>
+        <div class="stat-sub neutral">uploaded</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <a href="{% url 'group_list' %}" class="qa-btn">
+        <span class="qa-icon">💬</span>
+        <div class="qa-label">New Chat</div>
+    </a>
+    <a href="{% url 'create_meeting' %}" class="qa-btn">
+        <span class="qa-icon">📹</span>
+        <div class="qa-label">Start Meeting</div>
+    </a>
+    <a href="{% url 'ai_chat' %}" class="qa-btn">
+        <span class="qa-icon">✦</span>
+        <div class="qa-label">Ask AI</div>
+    </a>
+    <a href="{% url 'create_task' %}" class="qa-btn">
+        <span class="qa-icon">✓</span>
+        <div class="qa-label">Add Task</div>
+    </a>
+</div>
+
+<!-- Two columns layout -->
+<div class="grid-2">
+
+    <!-- Recent Activity -->
+    <div class="activity-card">
+        <h3>Recent Activity</h3>
+        <div id="activity-list">
+            <div class="activity-item">
+                <div class="act-dot" style="background:var(--violet-light)"></div>
+                <div class="act-text">Welcome to ProChat! Start by joining a team.</div>
+                <div class="act-time">now</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Meetings -->
+    <div class="upcoming-card">
+        <h3 style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Upcoming Meetings</h3>
+        <div id="meetings-list">
+            <div class="no-meetings">No upcoming meetings</div>
+        </div>
+        <a href="{% url 'create_meeting' %}" class="btn-primary" style="width:100%;text-align:center;display:block;margin-top:10px">
+            + Schedule Meeting
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load stats via fetch
+fetch('/tasks/')
+    .then(() => {
+        document.getElementById('task-count').textContent = '0';
+        document.getElementById('msg-count').textContent = '0';
+        document.getElementById('meeting-count').textContent = '0';
+        document.getElementById('file-count').textContent = '0';
+    });
+</script>
+{% endblock %}
